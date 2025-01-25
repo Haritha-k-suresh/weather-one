@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather-Based Outfit Recommender</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: #fff;
+        }
+
+        input, button {
+            margin: 10px 0;
+            padding: 10px;
+            width: 80%;
+            font-size: 1rem;
+        }
+
+        button {
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .wardrobe-section {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .wardrobe-section h3 {
+            font-size: 1.2rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 600px) {
+            input, button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather-Based Outfit Recommender</h1>
+
+        <input type="text" id="city" placeholder="Enter your city">
+        <button id="getWeather">Get Recommendation</button>
+
+        <p id="weather"></p>
+        <p id="outfit"></p>
+
+        <div class="wardrobe-section">
+            <h3>My Wardrobe</h3>
+            <div class="checkbox-group">
+                <label><input type="checkbox" value="Shirts"> Shirts</label>
+                <label><input type="checkbox" value="Tops"> Tops</label>
+                <label><input type="checkbox" value="Crop Tops"> Crop Tops</label>
+                <label><input type="checkbox" value="Dress"> Dress</label>
+                <label><input type="checkbox" value="Kurta"> Kurta</label>
+                <label><input type="checkbox" value="Pants"> Pants</label>
+                <label><input type="checkbox" value="Jeans"> Jeans</label>
+                <label><input type="checkbox" value="Skirt"> Skirt</label>
+                <label><input type="checkbox" value="Sweatshirt"> Sweatshirt</label>
+                <label><input type="checkbox" value="Sweater"> Sweater</label>
+                <label><input type="checkbox" value="Jackets"> Jackets</label>
+                <label><input type="checkbox" value="T-Shirts"> T-Shirts</label>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Fetch weather data from OpenWeatherMap
+        async function getWeather(city) {
+            const apiKey = 'YOUR_API_KEY'; // Replace with your OpenWeatherMap API key
+            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data;
+        }
+
+        // Get wardrobe selection
+        function getWardrobeSelection() {
+            const checkboxes = document.querySelectorAll('.checkbox-group input:checked');
+            return Array.from(checkboxes).map(checkbox => checkbox.value);
+        }
+
+        // Determine the outfit suggestion based on weather and wardrobe
+        function getOutfitSuggestion(temp, condition, wardrobe) {
+            let suggestion = "";
+            if (temp < 10) {
+                suggestion = wardrobe.includes("Sweater") || wardrobe.includes("Jackets")
+                    ? "Wear a sweater or jacket."
+                    : "It's cold. Consider warm clothes.";
+            } else if (temp >= 10 && temp < 25) {
+                suggestion = wardrobe.includes("Shirts") || wardrobe.includes("T-Shirts") || wardrobe.includes("Jeans")
+                    ? "T-shirt and jeans would be great!"
+                    : "It's moderate. Dress comfortably.";
+            } else if (temp >= 25) {
+                suggestion = wardrobe.includes("Tops") || wardrobe.includes("Skirt") || wardrobe.includes("Dress")
+                    ? "A top or dress would be perfect!"
+                    : "It's hot. Wear light and airy clothes.";
+            } else if (condition.includes("rain")) {
+                suggestion = wardrobe.includes("Jackets")
+                    ? "Don't forget a raincoat or waterproof jacket!"
+                    : "Rainy weather. Dress accordingly.";
+            }
+            return suggestion || "Dress comfortably!";
+        }
+
+        // Event listener for the "Get Recommendation" button
+        document.getElementById('getWeather').addEventListener('click', async function () {
+            const city = document.getElementById('city').value;
+            const wardrobe = getWardrobeSelection();
+            const weatherData = await getWeather(city);
+
+            if (weatherData.cod === 200) {
+                const temp = weatherData.main.temp;
+                const condition = weatherData.weather[0].description;
+
+                document.getElementById('weather').textContent =
+                    `Current weather in ${city}: ${temp}°C, ${condition}`;
+                document.getElementById('outfit').textContent =
+                    getOutfitSuggestion(temp, condition, wardrobe);
+            } else {
+                document.getElementById('weather').textContent = "City not found. Please try again.";
+                document.getElementById('outfit').textContent = "";
+            }
+        });
+    </script>
+</body>
+</html>
